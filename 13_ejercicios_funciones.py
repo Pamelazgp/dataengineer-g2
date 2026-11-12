@@ -86,3 +86,61 @@ def es_transaccion_valida(monto: float, moneda: str):
     if monto >= 0 and moneda.upper() in monedas_permitidas:
         return True
     return False
+
+"""Ejercicio 4: Conversor de divisas con tasa configurable"""
+
+def convertir_a_usd(monto: float, moneda_origen: str, tasa_cambio: float):
+    moneda=moneda_origen.upper()
+    if moneda=="PEN":
+        return round(monto / tasa_cambio, 2)
+    if moneda=="USD":
+        return round(monto, 2)
+    
+"""Ejercicio 5: Orquestador del pipeline"""
+# 1. Filtrar por el estado del negocio, tiene que estar COMPLETADO
+# 2. Limpiar los nombres
+# 3. Determinar el dominio
+# 4. Validar la transacción
+# 5. Convertir a USD si es necesario
+# 6. Construir un diccionario de salida
+
+def ejecutar_pipeline(datos_crudos: list[dict]):
+    registros_limpios = []
+    descartados=0
+    monto_total=0
+    
+    for fila in datos_crudos:
+        #1. Filtrar por estado del negocio
+        if fila["estado"] != "COMPLETADO":
+            descartados+=1
+            continue 
+        
+        #4. Validar la transacción
+        if not es_transaccion_valida(fila["subtotal"], fila["moneda"]):
+            descartados+=1
+            continue
+        
+        #2. Limpiar los nombres
+        fila["cliente"] = limpiar_nombre(fila["cliente"])
+        
+        #3. Determinar el dominio
+        fila["dominio"] = extraer_dominio(fila["email"])
+        
+        #5. Convertir a USD si es necesario
+        fila["subtotal"]= convertir_a_usd(fila["subtotal"], fila["moneda"], 3.5)
+        monto_total=monto_total+fila["subtotal"]
+        fila["moneda"] = "USD"
+        
+        registros_limpios.append(fila)
+        
+    return{
+        "data_final": registros_limpios,
+        "registros_procesados": len(datos_crudos),
+        "registros_descartados": descartados,
+        "monto_total_usd": monto_total
+    }
+    
+from pprint import pprint 
+resultado=ejecutar_pipeline(ventas_crudas)  # Llamado a la función para ejecutar el pipeline
+pprint(resultado)  # Imprime el resultado final del pipeline   
+    
