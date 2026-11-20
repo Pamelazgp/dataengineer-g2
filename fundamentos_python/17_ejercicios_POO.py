@@ -60,7 +60,7 @@ class Usuario:
         
 def main():
     usuarios_objetos = []
-    with open("datos.csv", "r", encoding="utf-8") as archivo:
+    with open("fundamentos_python\datos.csv", "r", encoding="utf-8") as archivo:
         lector=csv.reader(archivo)
         n_fila=0
         for fila in lector:
